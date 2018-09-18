@@ -74,10 +74,9 @@ $customer = $SBanken->getCustomer($customerID);
 ```
 
 Parameters:
-
-| Parameter     | Required    | Type    | Description                                        |
-|---------------|-------------|---------|----------------------------------------------------|
-| `$customerID` | true        | string  | Your social security numbers (11 characters long). |
+   
+* `$customerID` (string) *required* 
+  Your social security numbers (11 characters long).
 
 ### Get Accounts 
 You can get the accounts owned by a customer by running the `getAccounts` command:
@@ -88,6 +87,7 @@ $accounts = $SBanken->getAccounts($customerID);
 ```
 
 Parameters:
+
 * `$customerID` (string) *required*
   Your social security numbers (11 characters long).
 
@@ -101,6 +101,7 @@ $account = $SBanken->getAccount($customerID, $accountID);
 ```
 
 Parameters:
+
 * `$customerID` (string) *required*
   Your social security numbers (11 characters long).
 * `$accountID` (string) *required*
@@ -120,6 +121,7 @@ $transactions = $SBanken->getTransactions($customerID, $accountID, $index, $leng
 ```
 
 Parameters:
+
 * `$customerID` (string) *required*
   Your social security numbers (11 characters long).
 * `$accountID` (string) *required*
@@ -147,6 +149,7 @@ $eInvoices = $SBanken->getEInvoices($customerID, $status, $index, $length, $star
 ```
 
 Parameters:
+
 * `$customerID` (string) *required*
   Your social security numbers (11 characters long).
 * `$status` (string) *optional, default: ALL*
@@ -170,6 +173,7 @@ $eInvoice = $SBanken->getEInvoices($customerID, $eInvoiceID);
 ```
 
 Parameters:
+
 * `$customerID` (string) *required*
   Your social security numbers (11 characters long).
 * `$eInvoiceID` (string) *required*
