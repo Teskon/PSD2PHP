@@ -20,7 +20,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Teskon\\PSD2NO\\": "src/"
+            "Teskon\\PSD2PHP\\": "src/"
         }
     }
 }

@@ -17,7 +17,7 @@
 
      class PSD2PHP {
         /**
-         * Main constructor for PSD2NO.
+         * Main constructor for PSD2PHP.
          * 
          * @var string $bank
          * @var array $configuration

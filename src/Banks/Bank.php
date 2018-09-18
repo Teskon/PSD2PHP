@@ -1,7 +1,7 @@
 <?php
-    namespace Teskon\PSD2NO\Banks;
+    namespace Teskon\PSD2PHP\Banks;
     use GuzzleHttp\Client;
-    use Teskon\PSD2NO\Exceptions\Banks\BankException;
+    use Teskon\PSD2PHP\Exceptions\Banks\BankException;
     use GuzzleHttp\Exception\BadResponseException;
 
     /**

@@ -1,7 +1,7 @@
 <?php
-    namespace Teskon\PSD2NO\Banks\SBanken;
-    use Teskon\PSD2NO\Banks\Bank;
-    use Teskon\PSD2NO\Exceptions\Banks\SBanken\{
+    namespace Teskon\PSD2PHP\Banks\SBanken;
+    use Teskon\PSD2PHP\Banks\Bank;
+    use Teskon\PSD2PHP\Exceptions\Banks\SBanken\{
         SBankenAccountsException, 
         SBankenAuthTokenException, 
         SBankenCustomerException, 
