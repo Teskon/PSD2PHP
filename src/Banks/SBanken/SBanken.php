@@ -114,7 +114,7 @@
                 'Authorization' =>  $this->getBasicAuthorization()
             ]));
 
-            if(!is_array($token))
+            if(!is_array($token) || !isset($token['access_token'], $token['expires_in'], $token['token_type']))
                 throw new SBankenAuthTokenException("Could not retrieve auth token. HTTP code: " . $token->getStatusCode());
             
             $this->token = $token['access_token'];
@@ -314,24 +314,6 @@
                 throw new SBankenEInvoiceException("Could not GET E-Invoice. Ensure that you have the correct access privileges.");
 
             return $eInvoice;
-          }
-
-          /**
-           * Set header token
-           * 
-           * @var string $token
-           * @var string $type
-           * 
-           * @return array
-           */
-          public function setHeaderToken($token, $type = "Bearer"){
-            if(!in_array($type, ['Bearer']))
-                throw new SbankenAuthTokenException("Can't set auth token. Auth token needs to be of type Bearer.");
-
-            $this->token = [
-                'access_token' => $token,
-                'token_type' => $type
-            ];
           }
 
           
