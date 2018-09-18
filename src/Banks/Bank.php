@@ -136,7 +136,7 @@
          * @return string
          */
         protected function getBasicAuthorization(){
-            return 'Basic ' . base64_encode($this->authIdentifier . ':' . $this->authSecret);
+            return 'Basic ' . base64_encode(urlencode($this->authIdentifier) . ':' . urlencode($this->authSecret));
         }
 
         /**
