@@ -55,6 +55,7 @@ $SBanken = new SBanken("ClientID", "ClientSecret", [
 The example above will create an instance of the SBanken object with a max number of allowed redirects of 3. Available configuration parameters are listed here:
 
 | Type       | Key                 | Description                          | Default value     |
+|------------|---------------------|--------------------------------------|-------------------|
 | int        | max                 | Maximum number of allowed redirects. | 5                 |
 | bool       | strict              | Set to true to use strict redirects. Strict RFC compliant redirects mean that POST redirect requests are sent as POST requests vs. doing what most browsers do which is redirect POST requests with GET requests. | false |
 | bool       | referer             | Set to true to enable adding the Referer header when redirecting. | false             |
