@@ -105,10 +105,4 @@ class SBankenTest extends TestCase
     $this->assertTrue(is_array($SBanken->getEInvoices("1", "ALL", 0, 1000)));
 	  unset($SBanken);
   }
-
-  public function testPayEInvoice(){
-    $SBanken = new SBanken($this->clientID, $this->clientSecret);
-    $this->assertTrue(is_array($SBanken->payEInvoice("1", "2", "3")));
-    unset($SBanken);
-  }
 }
