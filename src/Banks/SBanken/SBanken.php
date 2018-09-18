@@ -115,7 +115,7 @@
             ]));
 
             if(!is_array($token) || !isset($token['access_token'], $token['expires_in'], $token['token_type']))
-                throw new SBankenAuthTokenException("Could not retrieve auth token. HTTP code: " . $token->getStatusCode());
+                throw new SBankenAuthTokenException("Could not retrieve auth token. Ensure that your API token and secret is correct");
             
             $this->token = $token['access_token'];
             return [
