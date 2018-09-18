@@ -49,7 +49,7 @@ require 'vendor/autoload.php';
 $bank = new PSD2PHP("Bank", "ClientID", "ClientSecret");
 ```
 
-Please note that the above code is just an example using the Bank `Bank` with the client ID `ClientID` and client secret `ClientSecret`. Some banks require different configuration values, and might allow for specification using a `configuration` parameter. Check the readme of the bank you're going to use in `Banks/YOUR BANK/` for more details about which configuration variables are needed.
+Please note that the above code is just an example using the Bank `Bank` with the client ID `ClientID` and client secret `ClientSecret`. Some banks require different configuration values, and might allow for specification using a `configuration` parameter. Check the readme of the bank you're going to use in `src/Banks/YOUR BANK/` for more details about which configuration variables are needed.
 
 You can also directly connect to the bank using the main class of the bank itself:
 ```php
