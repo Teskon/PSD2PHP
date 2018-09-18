@@ -63,7 +63,33 @@ The example above will create an instance of the SBanken object with a max numbe
 | callable   | on_redirect         | PHP callable that is invoked when a redirect is encountered. The callable is invoked with the original request and the redirect response that was received. Any return value from the on_redirect function is ignored. | null              |
 | bool       | track_redirects     | When set to true, each redirected URI and status code encountered will be tracked in the X-Guzzle-Redirect-History and X-Guzzle-Redirect-Status-History headers respectively. All URIs and status codes will be stored in the order which the redirects were encountered. | false             |
 
-In this version there is no option to change the configuration values for each request. This is a planned feature that will be added soon. If you need to do that now, you can recreate the bank instance.
+If you want to change the global configuration values you can use the `setConfiguration` function:
+
+```php
+$customer = $SBanken->getCustomer($customerID);
+
+$customerWithReferer = $SBanken->setConfiguration(['referer' => true])->getCustomer($customerID);
+```
+
+The code above will run two requests to the API; the first with `referer` as `false` and the second with `referer` as `true`
+
+Please note that this function will set the configuration values stored by the $SBanken class until an API request is sent. When that happens it will fall back to the configuration values it had previously. If you need to change the global configuration values and they are going to persist between requests you need to use the `setGlobalConfiguration` function:
+
+```php
+$customer = $SBanken->getCustomer($customerID);
+
+$customerWithReferer = $SBanken->setGlobalConfiguration(['referer' => true])->getCustomer($customerID);
+```
+
+All requests sent after `$customerWithReferer` will have `referer` set to `true` if you use the code above.
+
+If you want to get the current configuration values you can use the `getConfiguration` function
+
+```php
+$configuration = $SBanken->getConfiguration();
+
+var_dump($configuration);
+```
 
 ### Get Customer information
 You can get the customer information by running the `getCustomer` command:
@@ -183,4 +209,3 @@ Parameters:
 We're planning to update this module by adding support for more functionality as it is available. Currently we are planning to add support for:
 * Transfer money between owned accounts
 * Pay E-Invoices.
-* Make it possible to change configuration variables for each request

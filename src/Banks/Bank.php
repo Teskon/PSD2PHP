@@ -27,6 +27,11 @@
         protected $configuration;
 
         /**
+         * @var array $temporaryConfiguration;
+         */
+        protected $temporaryConfiguration;
+
+        /**
          * @var array $defaultHeaders
          */
         protected $defaultHeaders = [];
@@ -51,18 +56,8 @@
             $this->authIdentifier = $authIdentifier;
             $this->authSecret = $authSecret;
 
-            // Set default configuration for HTTP Client
-            $defaultConfiguration = $this->getBaseDefaultConfigurationVariables();
-
-            if(method_exists($this, 'getDefaultConfigurationVariables')){
-                $defaultConfiguration = array_merge($defaultConfiguration, $this->getDefaultConfigurationVariables());
-            }
-            
-            // Set connection configuration and merge with defaults
-            $this->configuration = array_merge($defaultConfiguration, $configuration);
-
-            // Set HTTP Client
-            $this->setHttpClient();
+            // Set initial configuration
+            $this->setConfiguration($configuration);
 
             if(method_exists($this, 'getAuthToken')){
                 // Get Auth Token
@@ -215,6 +210,9 @@
                 $response = $e->getResponse();
             }
 
+            // Reset configuration values
+            $this->setConfiguration($this->temporaryConfiguration);
+
             return $this->generateReturn($response, $type);
         }
 
@@ -247,6 +245,81 @@
          */
         protected function returnJson($response){
             return json_decode($response, true);
+        }
+
+        /**
+         * Get configuration values
+         * 
+         * @return array
+         */
+        public function getConfiguration(){
+            return $this->configuration;
+        }
+
+        /**
+         * Update configuration values
+         * 
+         * @var array $configuration
+         * 
+         * @return self
+         */
+        public function setConfiguration(array $configuration){
+            // Check if change is needed
+            if(is_array($this->configuration) && $this->configuration === $this->temporaryConfiguration && count($configuration) === 0){
+                return $this;
+            }
+
+            if(is_array($this->configuration) && $configuration !== $this->temporaryConfiguration){
+                $this->temporaryConfiguration = $this->configuration;
+            }
+            
+            // Set connection configuration and merge with defaults
+            $this->configuration = array_merge($this->getDefaultConfigurationValues(), $configuration);
+
+            if($configuration !== $this->temporaryConfiguration && $this->temporaryConfiguration === NULL){
+                $this->temporaryConfiguration = $this->configuration;
+            }
+
+            $this->setHttpClient();
+
+            return $this;
+        }
+
+        /**
+         * Update global configuration values
+         * 
+         * @var array $configuration
+         * 
+         * @return self
+         */
+        public function setGlobalConfiguration(array $configuration){
+            // Check if change is needed
+            if(is_array($this->configuration) && $this->configuration === $this->temporaryConfiguration && count($configuration) === 0){
+                return $this;
+            }
+
+            // Set connection configuration and merge with defaults
+            $this->temporaryConfiguration = $this->configuration = array_merge($this->getDefaultConfigurationValues(), $configuration);
+
+            $this->setHttpClient();
+
+            return $this;
+        }
+
+        /**
+         * Get default configuration values
+         * 
+         * @return array
+         */
+        private function getDefaultConfigurationValues(){
+            // Get default configuration for HTTP Client
+            $defaultConfiguration = $this->getBaseDefaultConfigurationVariables();
+
+            if(method_exists($this, 'getDefaultConfigurationVariables')){
+                $defaultConfiguration = array_merge($defaultConfiguration, $this->getDefaultConfigurationVariables());
+            }
+
+            return $defaultConfiguration;
         }
 
      } 
