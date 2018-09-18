@@ -207,8 +207,6 @@
 
             // Make sure endpoint is up to date
             $parameters['base_uri'] = $this->endpoint;
-
-            $parameters['debug'] = true;
             
             try {
                 $response = $this->httpClient->request($method, $endpoint, $parameters);
