@@ -1,9 +1,9 @@
 <?php
-    namespace Teskon\PSD2NO;
+    namespace Teskon\PSD2PHP;
 
     /**
      * 
-     * PSD2NO is a module based script that is used to connect to various banks across Norway to implement the new Banking APIs into your application.
+     * PSD2PHP is a module based script that is used to connect to various banks to implement the new Banking APIs into your application.
      * 
      * PSD2 (Payment Service Directive) is a a new banking directive that is making the Bank information available for you to implement into your application.
      * This will allow you to see your bank balance, and make transactions from your own website (and much more).
@@ -15,7 +15,7 @@
      * @author Kristian Auestad <kristianaue@gmail.com>
      */
 
-     class PSD2NO {
+     class PSD2PHP {
         /**
          * Main constructor for PSD2NO.
          * 
