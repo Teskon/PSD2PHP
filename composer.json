@@ -1,0 +1,26 @@
+{
+    "name": "teskon/psd2no",
+    "description": "PSD2 package for easy use of the public Banking APIs in Norway.",
+    "keywords": ["psd2", "composer", "package"],
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Kristian Auestad",
+            "email": "kristianaue@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "type": "project",
+    "require": {
+        "php": ">=7.1",
+        "guzzlehttp/guzzle": "~6.3"
+    },
+    "require-dev": {
+		"phpunit/phpunit": "6.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Teskon\\PSD2NO\\": "src/"
+        }
+    }
+}
