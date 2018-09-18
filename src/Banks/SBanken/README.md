@@ -74,8 +74,8 @@ $customer = $SBanken->getCustomer($customerID);
 ```
 
 Parameters:
-| Parameter     | Required    | Type    | Description        |
-|---------------|-------------|---------|--------------------|
+| Parameter     | Required    | Type    | Description                                        |
+|---------------|-------------|---------|----------------------------------------------------|
 | `$customerID` | true        | string  | Your social security numbers (11 characters long). |
 
 ### Get Accounts 
