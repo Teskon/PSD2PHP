@@ -64,5 +64,5 @@ Note that the example above is using our first bank integration (SBanken). Chang
 
 For more details about which commands you can run, read the readme of the bank you're using.
 
-## Problem/bugs
+## Problems/bugs
 If you encounter any problems/bugs, please let me know on our [Issue tracker](https://github.com/Teskon/PSD2PHP/issues).
