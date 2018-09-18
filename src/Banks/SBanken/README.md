@@ -88,7 +88,7 @@ $accounts = $SBanken->getAccounts($customerID);
 
 Parameters:
 
-* `$customerID` (string) *required*\
+* `$customerID` (string) *required*  
   Your social security numbers (11 characters long).
 
 ### Get Account
