@@ -1,7 +1,7 @@
 <?php 
 use PHPUnit\Framework\TestCase;
-use Teskon\PSD2NO\PSD2NO;
-use Teskon\PSD2NO\Banks\SBanken\SBanken;
+use Teskon\PSD2PHP\PSD2PHP;
+use Teskon\PSD2PHP\Banks\SBanken\SBanken;
 
 /**
 *  Class used to test SBanken Class for Syntax Errors and such
@@ -15,7 +15,7 @@ class SBankenTest extends TestCase
   private $clientSecret = "";
 	
   /**
-  * Check if PSD2NO has any syntax errors to help troubleshoot any typos before pushing to production
+  * Check if SBanken has any syntax errors to help troubleshoot any typos before pushing to production
   * 
   */
   public function testIsThereAnySyntaxError()
@@ -30,7 +30,7 @@ class SBankenTest extends TestCase
    * 
    */
   public function testConfigurationSetup(){
-    $SBanken = new PSD2NO("SBanken", $this->clientID, $this->clientSecret);
+    $SBanken = new PSD2PHP("SBanken", $this->clientID, $this->clientSecret);
     $this->assertTrue(is_object($SBanken));
     unset($SBanken);
   }

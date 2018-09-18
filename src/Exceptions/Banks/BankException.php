@@ -1,5 +1,5 @@
 <?php
-    namespace Teskon\PSD2NO\Exceptions\Banks;
+    namespace Teskon\PSD2PHP\Exceptions\Banks;
     use Exception;
 
     /**
