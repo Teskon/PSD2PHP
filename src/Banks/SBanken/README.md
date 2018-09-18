@@ -75,7 +75,7 @@ $customer = $SBanken->getCustomer($customerID);
 
 Parameters:
    
-* `$customerID` (string) *required* 
+* `$customerID` (string) *required*  
   Your social security numbers (11 characters long).
 
 ### Get Accounts 
@@ -102,9 +102,9 @@ $account = $SBanken->getAccount($customerID, $accountID);
 
 Parameters:
 
-* `$customerID` (string) *required*
+* `$customerID` (string) *required*  
   Your social security numbers (11 characters long).
-* `$accountID` (string) *required*
+* `$accountID` (string) *required*  
   Account ID retrieved from `getAccounts`
 
 ### Get Transactions
@@ -122,17 +122,17 @@ $transactions = $SBanken->getTransactions($customerID, $accountID, $index, $leng
 
 Parameters:
 
-* `$customerID` (string) *required*
+* `$customerID` (string) *required*  
   Your social security numbers (11 characters long).
-* `$accountID` (string) *required*
+* `$accountID` (string) *required*  
   Account ID retrieved from `getAccounts`
-* `$index` (int) *optional, default: 0*
+* `$index` (int) *optional, default: 0*  
   Starting index of retrieved results
-* `$length` (int) *optional, default: 100*
+* `$length` (int) *optional, default: 100*  
   Result limit. Minimum value is 1. Maximum value is 1000.
-* `$startDate` (string) *optional, default: current date - 30 days*
+* `$startDate` (string) *optional, default: current date - 30 days*  
   Date to start retrieving transactions from. Minimum date is 2000-01-01. Maximum date is current date + 1 day.
-* `$endDate` (string) *optional, default: current date*
+* `$endDate` (string) *optional, default: current date*  
   Date to stop retrieving transactions from. Minimum date is $startDate. Maximum date is current date + 1 day.
 
 ### Get E-Invoices
@@ -150,17 +150,17 @@ $eInvoices = $SBanken->getEInvoices($customerID, $status, $index, $length, $star
 
 Parameters:
 
-* `$customerID` (string) *required*
+* `$customerID` (string) *required*  
   Your social security numbers (11 characters long).
-* `$status` (string) *optional, default: ALL*
+* `$status` (string) *optional, default: ALL*  
   Current status of e-invoices you want returned. Can be ALL, NEW, PROCESSED or DELETED.
-* `$index` (int) *optional, default: 0*
+* `$index` (int) *optional, default: 0*  
   Starting index of retrieved results
-* `$length` (int) *optional, default: 100*
+* `$length` (int) *optional, default: 100*  
   Result limit. Minimum value is 1. Maximum value is 1000.
-* `$startDate` (string) *optional, default: current date - 60 days*
+* `$startDate` (string) *optional, default: current date - 60 days*  
   Date to start retrieving transactions from. Minimum date is 2000-01-01. Maximum date is current date + 60 day.
-* `$endDate` (string) *optional, default: current date + 60 days*
+* `$endDate` (string) *optional, default: current date + 60 days*  
   Date to stop retrieving transactions from. Minimum date is $startDate. Maximum date is current date + 60 days.
 
 ### Get E-Invoice
@@ -174,9 +174,9 @@ $eInvoice = $SBanken->getEInvoices($customerID, $eInvoiceID);
 
 Parameters:
 
-* `$customerID` (string) *required*
+* `$customerID` (string) *required*  
   Your social security numbers (11 characters long).
-* `$eInvoiceID` (string) *required*
+* `$eInvoiceID` (string) *required*  
   ID of specified E-Invoice retrieved from `getEInvoices`
 
 ## Planned functionality
