@@ -74,8 +74,9 @@ $customer = $SBanken->getCustomer($customerID);
 ```
 
 Parameters:
-* `$customerID` (string) *required* 
-  Your social security numbers (11 characters long).
+| Parameter     | Required    | Type    | Description        |
+|---------------|-------------|---------|--------------------|
+| `$customerID` | true        | string  | Your social security numbers (11 characters long). |
 
 ### Get Accounts 
 You can get the accounts owned by a customer by running the `getAccounts` command:
