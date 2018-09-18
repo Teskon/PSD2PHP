@@ -1,5 +1,5 @@
 {
-    "name": "teskon/psd2php",
+    "name": "Teskon/PSD2PHP",
     "description": "PSD2 package for easy use of the public Banking APIs.",
     "keywords": ["psd2", "composer", "package"],
     "license": "GPL-3.0-or-later",
