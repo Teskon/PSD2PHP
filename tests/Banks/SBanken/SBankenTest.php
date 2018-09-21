@@ -24,24 +24,6 @@ class SBankenTest extends TestCase
    * @var string $clientSecret
    */
   private $clientSecret = "";
-
-  /**
-   * Class used to store SBanken integration
-   * 
-   * @var SBanken $SBanken
-   */
-  private $SBanken;
-
-  /**
-   * SBankenTest constructor
-   * 
-   */
-  public function __construct(){
-    $this->SBanken = new SBanken($this->clientID, $this->clientSecret, [
-      // Activate debug in testing script
-      'debug' => true
-    ]);
-  }
 	
   /**
   * Check if SBanken has any syntax errors to help troubleshoot any typos before pushing to production
@@ -49,8 +31,11 @@ class SBankenTest extends TestCase
   */
   public function testIsThereAnySyntaxError()
   {
-	$this->assertTrue(is_object($this->SBanken));
-	unset($SBanken);
+    $SBanken = new SBanken($this->clientID, $this->clientSecret, [
+        'debug' => true
+    ]);
+    $this->assertTrue(is_object($SBanken));
+    unset($SBanken);
   }
 
   /**
@@ -58,7 +43,10 @@ class SBankenTest extends TestCase
    * 
    */
   public function testConfigurationSetup(){
-    $this->assertTrue(is_object($this->SBanken));
+    $SBanken = new SBanken($this->clientID, $this->clientSecret, [
+        'debug' => true
+    ]);
+    $this->assertTrue(is_object($SBanken));
     unset($SBanken);
   }
 
@@ -67,8 +55,11 @@ class SBankenTest extends TestCase
    * 
    */
   public function testGetAuthToken(){
-    $this->assertTrue(is_array($this->SBanken->getAuthToken()));
-	  unset($SBanken);
+    $SBanken = new SBanken($this->clientID, $this->clientSecret, [
+        'debug' => true
+    ]);
+    $this->assertTrue(is_array($SBanken->getAuthToken()));
+    unset($SBanken);
   }
 
   /**
@@ -76,8 +67,11 @@ class SBankenTest extends TestCase
    * 
    */
   public function testGetCustomer(){
-    $this->assertTrue(is_array($this->SBanken->getCustomer("1")));
-	  unset($SBanken);
+    $SBanken = new SBanken($this->clientID, $this->clientSecret, [
+        'debug' => true
+    ]);
+    $this->assertTrue(is_array($SBanken->getCustomer("1")));
+    unset($SBanken);
   }
 
   /**
@@ -85,8 +79,11 @@ class SBankenTest extends TestCase
    * 
    */
   public function testGetAccounts(){
-    $this->assertTrue(is_array($this->SBanken->getAccounts("1")));
-	  unset($SBanken);
+    $SBanken = new SBanken($this->clientID, $this->clientSecret, [
+        'debug' => true
+    ]);
+    $this->assertTrue(is_array($SBanken->getAccounts("1")));
+    unset($SBanken);
   }
 
   /**
@@ -94,8 +91,11 @@ class SBankenTest extends TestCase
    * 
    */
   public function testGetAccount(){
-    $this->assertTrue(is_array($this->SBanken->getAccount("1", "2")));
-	  unset($SBanken);
+    $SBanken = new SBanken($this->clientID, $this->clientSecret, [
+        'debug' => true
+    ]);
+    $this->assertTrue(is_array($SBanken->getAccount("1", "2")));
+    unset($SBanken);
   }
 
   /**
@@ -103,8 +103,11 @@ class SBankenTest extends TestCase
    * 
    */
   public function testGetTransactions(){
-    $this->assertTrue(is_array($this->SBanken->getTransactions("1", "2")));
-	  unset($SBanken);
+    $SBanken = new SBanken($this->clientID, $this->clientSecret, [
+        'debug' => true
+    ]);
+    $this->assertTrue(is_array($SBanken->getTransactions("1", "2")));
+    unset($SBanken);
   }
 
   /**
@@ -112,7 +115,34 @@ class SBankenTest extends TestCase
    * 
    */
   public function testEInvoices(){
-    $this->assertTrue(is_array($this->SBanken->getEInvoices("1", "ALL", 0, 1000)));
-	  unset($SBanken);
+    $SBanken = new SBanken($this->clientID, $this->clientSecret, [
+        'debug' => true
+    ]);
+    $this->assertTrue(is_array($SBanken->getEInvoices("1", "ALL", 0, 1000)));
+    unset($SBanken);
+  }
+
+  /**
+   * Test transfer between owned accounts
+   * 
+   */
+  public function testPostTransfer(){
+    $SBanken = new SBanken($this->clientID, $this->clientSecret, [
+        'debug' => true
+    ]);
+    $this->assertTrue(is_array($SBanken->postTransfer("1", "2", "3", "Text", 1.00)));
+    unset($SBanken);
+  }
+
+  /**
+   * Test payment of e-invoice
+   * 
+   */
+  public function testPostEInvoice(){
+    $SBanken = new SBanken($this->clientID, $this->clientSecret, [
+        'debug' => true
+    ]);
+    $this->assertTrue(is_array($SBanken->postEInvoice("1", "2", "3")));
+    unset($SBanken);
   }
 }

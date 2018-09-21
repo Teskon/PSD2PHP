@@ -106,7 +106,7 @@
            */
           public function getAuthToken(bool $force = false){
             // Check if token exists in cache
-            if($force == false && is_array($this->token))
+            if($force == false && is_string($this->token))
                 return $this->token;
 
             // Get token from API
@@ -118,6 +118,7 @@
                 throw new SBankenAuthTokenException("Could not retrieve auth token. Ensure that your API token and secret is correct");
             
             $this->token = $token['access_token'];
+            
             return [
                 'access_token' => $this->token,
                 'expires_in' => $token['expires_in'],
@@ -316,5 +317,61 @@
             return $eInvoice;
           }
 
-          
+          /**
+           * Transfer money between own accounts
+           * 
+           * @var string $customerID
+           * @var string $fromAccountID
+           * @var string $toAccountID
+           * @var string $message
+           * @var float $amount
+           * 
+           * @return array
+           */
+          public function postTransfer(string $customerID, string $fromAccountID, string $toAccountID, string $message, float $amount){
+            $this->setEndpoint('accounts');
+
+            $transfer = $this->request('POST', 'Transfers', json_encode([
+                'fromAccountId' => $fromAccountID,
+                'toAccountId' => $toAccountID,
+                'message' => $message,
+                'amount' => $amount
+            ]), [
+                'customerId' => $customerID,
+                'Content-Type' => 'text/json'
+            ]);
+
+            if(!is_array($transfer))
+                throw new SBankenTransferException("Could not make transfer. Ensure that you have the correct access privileges.");
+
+            return $transfer;
+          }
+
+          /**
+           * Pay non-processed/new E-Invoice
+           * 
+           * @var string $customerID
+           * @var string $eInvoiceID
+           * @var string $accountID
+           * @var bool $payOnlyMinimumAmount
+           * 
+           * @return array
+           */
+          public function postEInvoice(string $customerID, string $eInvoiceID, string $accountID, bool $payOnlyMinimumAmount = false){
+              $this->setEndpoint('accounts');
+
+              $payment = $this->request('POST', 'EFakturas', json_encode([
+                  'eFakturaId' => $eInvoiceID,
+                  'accountId' => $accountID,
+                  'payOnlyMinimumAmount' => $payOnlyMinimumAmount
+              ]), [
+                  'customerId' => $customerID,
+                  'Content-Type' => 'text/json'
+              ]);
+
+              if(!is_array($payment))
+                throw new SBankenSBankenEInvoiceException("Could not pay e-invoice. Make sure that you have the correct access privileges and that the e-invoice hasn't been paid already.");
+
+              return $payment;
+          }
      } 
