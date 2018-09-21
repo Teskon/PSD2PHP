@@ -34,13 +34,6 @@
           ];
 
           /**
-           * Current endpoint
-           *
-           * @var string $endpoint
-           */
-           protected $endpoint = 'https://auth.sbanken.no/identityserver/';
-
-          /**
            * API token
            * 
            * @var array|null $token
@@ -62,17 +55,18 @@
           }
 
           /**
-           * Update endpoint
+           * Get endpoint
            * 
            * @var string $endpoint
-           * @return void
+           * 
+           * @return string
            */
-            protected function setEndpoint(string $endpoint){
-                if(!isset($this->endpoints[$endpoint]))
-                    throw new SBankenEndpointException("Could not set endpoint. Make sure that you are trying to use an existing endpoint");
-                
-                $this->endpoint = $this->endpoints[$endpoint];
-            }
+          protected function getEndpoint(string $endpoint){
+            if(!isset($this->endpoints[$endpoint]))  
+                throw new SBankenEndpointException("Could not set endpoint. Make sure that you are trying to use an existing endpoint");
+
+            return $this->endpoints[$endpoint];
+          }
         
           /**
            * Get default headers
@@ -106,24 +100,22 @@
            */
           public function getAuthToken(bool $force = false){
             // Check if token exists in cache
-            if($force == false && is_string($this->token))
+            if($force == false && is_array($this->token))
                 return $this->token;
 
+            $endpoint = $this->getEndpoint('token') . 'connect/token';
+
             // Get token from API
-            $token = $this->request('POST', '/identityserver/connect/token', ['grant_type' => 'client_credentials'], array_merge($this->getDefaultHeaders(), [
+            $token = $this->request('POST', $endpoint, ['grant_type' => 'client_credentials'], array_merge($this->getDefaultHeaders(), [
                 'Authorization' =>  $this->getBasicAuthorization()
             ]));
 
             if(!is_array($token) || !isset($token['access_token'], $token['expires_in'], $token['token_type']))
                 throw new SBankenAuthTokenException("Could not retrieve auth token. Ensure that your API token and secret is correct");
             
-            $this->token = $token['access_token'];
-            
-            return [
-                'access_token' => $this->token,
-                'expires_in' => $token['expires_in'],
-                'token_type' => $token['token_type']
-            ];
+            $this->token = $token;
+
+            return $token;
           }
 
           /**
@@ -133,8 +125,8 @@
            * @return array
            */
           public function getCustomer(string $customerID){
-              $this->setEndpoint('customers');
-              $customer = $this->request('GET', 'Customers', [], [
+              $endpoint = $this->getEndpoint('customers') . 'Customers';
+              $customer = $this->request('GET', $endpoint, [], [
                   'customerId' => $customerID
               ]);
 
@@ -151,8 +143,8 @@
            * @return array
            */
           public function getAccounts(string $customerID){
-              $this->setEndpoint('accounts');
-              $accounts = $this->request('GET', 'Accounts', [], [
+              $endpoint = $this->getEndpoint('accounts') . 'Accounts';
+              $accounts = $this->request('GET', $endpoint, [], [
                   'customerId' => $customerID
               ]);
 
@@ -171,8 +163,8 @@
            * @return array
            */
           public function getAccount(string $customerID, string $accountID){
-            $this->setEndpoint('accounts');
-            $account = $this->request('GET', 'Accounts/' . urlencode($accountID), [], [
+            $endpoint = $this->getEndpoint('accounts') . 'Accounts/' . urlencode($accountID);
+            $account = $this->request('GET', $endpoint, [], [
                 'customerId' => $customerID
             ]);
 
@@ -194,8 +186,6 @@
            * @return array
            */
           public function getTransactions(string $customerID, string $accountID, int $index = 0, int $length = 100, $startDate = null, $endDate = null){
-            $this->setEndpoint('accounts');
-
             // Build GET parameters
             $parameters = [
                 'index' => $index,
@@ -224,7 +214,9 @@
 
             $parameters = '?' . http_build_query($parameters);
 
-            $transactions = $this->request('GET', 'Transactions/' . urlencode($accountID) . $parameters, [], [
+            $endpoint = $this->getEndpoint('accounts') . 'Transactions/' . urlencode($accountID) . $parameters;
+
+            $transactions = $this->request('GET', $endpoint, [], [
                 'customerId' => $customerID
             ]);
 
@@ -247,8 +239,6 @@
            * @return array
            */
           public function getEInvoices(string $customerID, string $status = 'ALL', int $index = 0, int $length = 100, string $startDate = null, string $endDate = null){
-            $this->setEndpoint('accounts');
-
             $status = strtoupper($status);
             if(!in_array($status, ['ALL', 'NEW', 'PROCESSED', 'DELETED']))
                 throw new SBankenEInvoiceException("The status needs to be ALL, NEW, PROCESSED or DELETED.");
@@ -286,7 +276,9 @@
 
             $parameters = '?' . http_build_query($parameters);
 
-            $eInvoices = $this->request('GET', 'EFakturas' . $parameters, [], [
+            $endpoint = $this->getEndpoint('accounts') . 'EFakturas' . $parameters;
+
+            $eInvoices = $this->request('GET', $endpoint, [], [
                 'customerId' => $customerID
             ]);
 
@@ -306,8 +298,9 @@
            */
           public function getEInvoice(string $customerID, string $eInvoiceID){
             $this->setEndpoint('accounts');
+            $endpoint = $this->getEndpoint('accounts') . 'EFakturas/' . urlencode($eInvoiceID);
 
-            $eInvoice = $this->request('GET', 'EFakturas/' . urlencode($eInvoiceID), [], [
+            $eInvoice = $this->request('GET', $endpoint, [], [
                 'customerId' => $customerID
             ]);
 
@@ -329,9 +322,9 @@
            * @return array
            */
           public function postTransfer(string $customerID, string $fromAccountID, string $toAccountID, string $message, float $amount){
-            $this->setEndpoint('accounts');
+            $endpoint = $this->getEndpoint('accounts') . 'Transfers';
 
-            $transfer = $this->request('POST', 'Transfers', json_encode([
+            $transfer = $this->request('POST', $endpoint, json_encode([
                 'fromAccountId' => $fromAccountID,
                 'toAccountId' => $toAccountID,
                 'message' => $message,
@@ -358,9 +351,9 @@
            * @return array
            */
           public function postEInvoice(string $customerID, string $eInvoiceID, string $accountID, bool $payOnlyMinimumAmount = false){
-              $this->setEndpoint('accounts');
+              $endpoint = $this->getEndpoint('accounts') . 'EFakturas';
 
-              $payment = $this->request('POST', 'EFakturas', json_encode([
+              $payment = $this->request('POST', $endpoint, json_encode([
                   'eFakturaId' => $eInvoiceID,
                   'accountId' => $accountID,
                   'payOnlyMinimumAmount' => $payOnlyMinimumAmount

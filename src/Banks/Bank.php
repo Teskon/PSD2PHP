@@ -45,6 +45,11 @@
          * @var array $validMethods
          */
         private $validMethods = ['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH', 'PUT'];
+
+        /**
+         * @var int $currentTry
+         */
+        private $currentTry = 0;
           
         /**
          * Default constructor for storing configuration variables
@@ -59,7 +64,7 @@
             // Set initial configuration
             $this->setConfiguration($configuration);
 
-            if(method_exists($this, 'getAuthToken')){
+            if(method_exists($this, 'getAuthToken') && isset($this->configuration['auth_init']) && $this->configuration['auth_init'] === true){
                 // Get Auth Token
                 $this->getAuthToken();
             }
@@ -121,7 +126,27 @@
                  * (bool) When set to true, each redirected URI and status code encountered will be tracked in the X-Guzzle-Redirect-History and X-Guzzle-Redirect-Status-History headers respectively. All URIs and status codes will be stored in the order which the redirects were encountered.
                  * 
                  */
-                'track_redirects' => false
+                'track_redirects' => false,
+
+                /**
+                 * (bool) When set to true, we will run the getAuthToken method from the bank on initialization
+                 * 
+                 */
+                'auth_init' => false,
+
+                /**
+                 * (int) Number of times we're going to retry to get the authentication token before giving up if we're getting an invalid response from the API.
+                 * 
+                 */
+                'auth_retries' => 1,
+
+                /**
+                 * (array) Error codes that will cause a retry to be initiated
+                 * 
+                 */
+                'auth_retries_codes' => [
+                    500
+                ]
             ];
         }
 
@@ -140,7 +165,12 @@
          * @return string
          */
         protected function getBearerAuthorization(){
-            return 'Bearer ' . $this->token;
+            $token = $this->getAuthToken();
+
+            if(!isset($token['token_type'], $token['access_token']))
+                return '';
+
+            return $token['token_type'] . ' ' . $token['access_token'];
         }
 
         /**
@@ -181,13 +211,13 @@
 
             // Check type of parameters
             if(is_array($parameters)){
-                $parameters = ['form_params' => $parameters];
+                $requestParameters = ['form_params' => $parameters];
             }
             else if(is_string($parameters)){
-                $parameters = ['body' => $parameters];
+                $requestParameters = ['body' => $parameters];
             }
             else if(is_null($parameters)){
-                $parameters = [];
+                $requestParameters = [];
             }
             else{
                 throw new BankException("Invalid type. Parameters sent with the request has to be array, string or null.");
@@ -195,20 +225,55 @@
 
             // Set headers for this specific request
             if((is_array($headers) && count($headers) > 0) || is_null($headers))
-                $parameters['headers'] = array_merge($this->defaultHeaders, $headers);
+                $requestParameters['headers'] = array_merge($this->defaultHeaders, $headers);
 
-            if(empty($parameters['headers']['Authorization']))
-                $parameters['headers']['Authorization'] = $this->getBearerAuthorization();
+            if(empty($requestParameters['headers']['Authorization']))
+                $requestParameters['headers']['Authorization'] = $this->getBearerAuthorization();
 
-            // Make sure endpoint is up to date
-            $parameters['base_uri'] = $this->endpoint;
-            
-            try {
-                $response = $this->httpClient->request($method, $endpoint, $parameters);
+            if(substr($endpoint, 0, 4) != 'http' && isset($this->endpoint) && $requestParameters['base_uri'] != $this->endpoint){
+                // Make sure endpoint is up to date
+                $requestParameters['base_uri'] = $this->endpoint;
             }
-            catch(BadResponseException $e){
-                $response = $e->getResponse();
+
+            // Overwrite auth_retries if not set
+            if(!isset($this->configuration['auth_retries']))
+                $this->configuration['auth_retries'] = 3;
+
+            // Check to ensure that auth_retries_codes is an array
+            if(!isset($this->configuration['auth_retries_codes']) || !is_array($this->configuration['auth_retries_codes'])){
+                if(isset($this->configuration['auth_retries_codes']) && is_int($this->configuration['auth_retries_codes'])){
+                    $this->configuration['auth_retries_codes'] = [$this->configuration['auth_retries_codes']];
+                }
+                else{
+                    $this->configuration['auth_retries_codes'] = [500];
+                }
             }
+
+            do {
+                try {
+                    $response = $this->httpClient->request($method, $endpoint, $requestParameters);
+                    break;
+                }
+                catch(BadResponseException $e){
+                    $response = $e->getResponse();
+
+                    $this->currentTry++;
+
+                    if($this->configuration['auth_retries'] != -1 && $this->currentTry > $this->configuration['auth_retries'])
+                        break;
+
+                    if(in_array($response->getStatusCode(), $this->configuration['auth_retries_codes'])){
+                        $this->getAuthToken(true);
+
+                        return $this->request($method, $endpoint, $parameters, $headers, $type);
+                    }
+                    else
+                        break;
+                }
+            } while(true);
+
+            // Reset $currentTry
+            $this->currentTry = 0;
 
             // Reset configuration values
             $this->setConfiguration($this->temporaryConfiguration);
@@ -268,6 +333,10 @@
             if(is_array($this->configuration) && $this->configuration === $this->temporaryConfiguration && count($configuration) === 0){
                 return $this;
             }
+
+            // Limitations - make sure auth_retries are never less than -1.
+            if(isset($configuration['auth_retries']) && $configuration['auth_retries'] < -1)
+                $configuration['auth_retries'] = -1;
 
             if(is_array($this->configuration) && $configuration !== $this->temporaryConfiguration){
                 $this->temporaryConfiguration = $this->configuration;
