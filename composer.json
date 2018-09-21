@@ -13,11 +13,13 @@
     "type": "project",
     "require": {
         "php": ">=7.1",
-        "guzzlehttp/guzzle": "~6.3",
-        "ext-curl": "^7.1"
+        "guzzlehttp/guzzle": "~6.3"
     },
     "require-dev": {
 		"phpunit/phpunit": "6.*"
+    },
+    "suggest": {
+        "ext-curl": "Allows for quicker response times when connecting to the banking APIs."
     },
     "autoload": {
         "psr-4": {
