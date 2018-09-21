@@ -370,7 +370,7 @@
               ]);
 
               if(!is_array($payment))
-                throw new SBankenSBankenEInvoiceException("Could not pay e-invoice. Make sure that you have the correct access privileges and that the e-invoice hasn't been paid already.");
+                throw new SBankenEInvoiceException("Could not pay e-invoice. Make sure that you have the correct access privileges and that the e-invoice hasn't been paid already.");
 
               return $payment;
           }
