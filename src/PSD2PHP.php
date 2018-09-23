@@ -16,11 +16,17 @@
      */
 
      class PSD2PHP {
+         /**
+          * Bank instance
+          *
+          * @var mixed $bank
+          */
+          private $bank = null;
         /**
          * Main constructor for PSD2PHP.
          * 
-         * @var string $bank
-         * @var array $configuration
+         * @param string $bank
+         * @param array $configuration
          */
         public function __construct(string $bank, ...$configuration){
             // Capitalize first character of $bank
@@ -32,6 +38,41 @@
 
             $bank = __NAMESPACE__ . '\\Banks\\' . $bank . '\\' . $bank;
 
-            return new $bank(...$configuration);
+            $this->bank = new $bank(...$configuration);
+        }
+
+        /**
+         * Call method
+         * 
+         * @param string $function
+         * @param array $parameters
+         * 
+         * @return mixed
+         */
+        public function __call(string $function, array $parameters){
+            $this->bank->{$function}(...$parameters);
+        }
+
+        /**
+         * Get variable
+         * 
+         * @param string $variable
+         * 
+         * @return mixed
+         */
+        public function __get(string $variable){
+            return $this->bank->{$variable};
+        }
+
+        /**
+         * Set variable
+         * 
+         * @param string $variable
+         * @param mixed $value
+         * 
+         * @return void
+         */
+        public function __set(string $variable, $value){
+            $this->bank->{$variable} = $value;
         }
      }
