@@ -57,7 +57,7 @@
           /**
            * Get endpoint
            * 
-           * @var string $endpoint
+           * @param string $endpoint
            * 
            * @return string
            */
@@ -95,14 +95,16 @@
           /**
            * Get header token
            * 
-           * @var bool $force
-           * @return array
+           * @param bool $force
+           * @return array|self
            */
           public function getAuthToken(bool $force = false){
             // Check if token exists in cache
             if($force == false && is_array($this->token))
                 return $this->token;
 
+            $this->forceRequest = true;
+            
             $endpoint = $this->getEndpoint('token') . 'connect/token';
 
             // Get token from API
@@ -110,7 +112,7 @@
                 'Authorization' =>  $this->getBasicAuthorization()
             ]));
 
-            if(!is_array($token) || !isset($token['access_token'], $token['expires_in'], $token['token_type']))
+            if(!is_array($token))
                 throw new SBankenAuthTokenException("Could not retrieve auth token. Ensure that your API token and secret is correct");
             
             $this->token = $token;
@@ -121,8 +123,8 @@
           /**
            * Get customer
            * 
-           * @var string $customerID
-           * @return array
+           * @param string $customerID
+           * @return array|self
            */
           public function getCustomer(string $customerID){
               $endpoint = $this->getEndpoint('customers') . 'Customers';
@@ -130,7 +132,7 @@
                   'customerId' => $customerID
               ]);
 
-            if(!is_array($customer))
+            if(!$this->isSuccessful($customer))
                 throw new SBankenCustomerException("Could not retrieve Customer information. Ensure that you have the correct privileges to do so.");
             
             return $customer;
@@ -139,8 +141,8 @@
           /**
            * Get accounts
            * 
-           * @var string $customerID
-           * @return array
+           * @param string $customerID
+           * @return array|self
            */
           public function getAccounts(string $customerID){
               $endpoint = $this->getEndpoint('accounts') . 'Accounts';
@@ -148,7 +150,7 @@
                   'customerId' => $customerID
               ]);
 
-            if(!is_array($accounts))
+            if(!$this->isSuccessful($accounts))
                 throw new SBankenAccountsException("Could not retrieve Accounts. Ensure that you have the corret privileges to do so.");
             
             return $accounts;
@@ -158,9 +160,9 @@
           /**
            * Get specific account
            * 
-           * @var string $customerID
-           * @var string $accountID
-           * @return array
+           * @param string $customerID
+           * @param string $accountID
+           * @return array|self
            */
           public function getAccount(string $customerID, string $accountID){
             $endpoint = $this->getEndpoint('accounts') . 'Accounts/' . urlencode($accountID);
@@ -168,7 +170,7 @@
                 'customerId' => $customerID
             ]);
 
-            if(!is_array($account))
+            if(!$this->isSuccessful($account))
                 throw new SBankenAccountsException("Could not retrieve Account. Ensure that you have the corret privileges to do so.");
                
             return $account;
@@ -177,13 +179,13 @@
           /**
            * Get account transactions
            * 
-           * @var string $customerID
-           * @var string $accountID
-           * @var int $index
-           * @var int $length
-           * @var mixed $startDate
-           * @var mixed $endDate
-           * @return array
+           * @param string $customerID
+           * @param string $accountID
+           * @param int $index
+           * @param int $length
+           * @param mixed $startDate
+           * @param mixed $endDate
+           * @return array|self
            */
           public function getTransactions(string $customerID, string $accountID, int $index = 0, int $length = 100, $startDate = null, $endDate = null){
             // Build GET parameters
@@ -212,15 +214,13 @@
             $parameters['startDate'] = $startDate;
             $parameters['endDate'] = $endDate;
 
-            $parameters = '?' . http_build_query($parameters);
+            $endpoint = $this->getEndpoint('accounts') . 'Transactions/' . urlencode($accountID);
 
-            $endpoint = $this->getEndpoint('accounts') . 'Transactions/' . urlencode($accountID) . $parameters;
-
-            $transactions = $this->request('GET', $endpoint, [], [
+            $transactions = $this->request('GET', $endpoint, $parameters, [
                 'customerId' => $customerID
             ]);
 
-            if(!is_array($transactions))
+            if(!$this->isSuccessful($transactions))
                 throw new SBankenTransactionsException("Could not retrieve Transactions. Ensure that you have the corret privileges to do so.");
 
             return $transactions;
@@ -229,14 +229,14 @@
           /**
            * Get all not-processed/new e-invoices
            * 
-           * @var string $customerID
-           * @var string $status
-           * @var int $index
-           * @var int $length
-           * @var string $startDate
-           * @var string $endDate
+           * @param string $customerID
+           * @param string $status
+           * @param int $index
+           * @param int $length
+           * @param string $startDate
+           * @param string $endDate
            * 
-           * @return array
+           * @return array|self
            */
           public function getEInvoices(string $customerID, string $status = 'ALL', int $index = 0, int $length = 100, string $startDate = null, string $endDate = null){
             $status = strtoupper($status);
@@ -274,15 +274,13 @@
                 'endDate' => $endDate
             ];
 
-            $parameters = '?' . http_build_query($parameters);
+            $endpoint = $this->getEndpoint('accounts') . 'EFakturas';
 
-            $endpoint = $this->getEndpoint('accounts') . 'EFakturas' . $parameters;
-
-            $eInvoices = $this->request('GET', $endpoint, [], [
+            $eInvoices = $this->request('GET', $endpoint, $parameters, [
                 'customerId' => $customerID
             ]);
 
-            if(!is_array($eInvoices))
+            if(!$this->isSuccessful($eInvoices))
                 throw new SBankenEInvoiceException("Could not GET new E-Invoices. Ensure that you have the correct access privileges");
 
             return $eInvoices;
@@ -291,10 +289,10 @@
           /**
            * Get specific e-invoice
            * 
-           * @var string $customerID
-           * @var string $eInvoiceID
+           * @param string $customerID
+           * @param string $eInvoiceID
            * 
-           * @return array
+           * @return array|self
            */
           public function getEInvoice(string $customerID, string $eInvoiceID){
             $this->setEndpoint('accounts');
@@ -304,7 +302,7 @@
                 'customerId' => $customerID
             ]);
 
-            if(!is_array($eInvoice))
+            if(!$this->isSuccessful($eInvoice))
                 throw new SBankenEInvoiceException("Could not GET E-Invoice. Ensure that you have the correct access privileges.");
 
             return $eInvoice;
@@ -313,28 +311,28 @@
           /**
            * Transfer money between own accounts
            * 
-           * @var string $customerID
-           * @var string $fromAccountID
-           * @var string $toAccountID
-           * @var string $message
-           * @var float $amount
+           * @param string $customerID
+           * @param string $fromAccountID
+           * @param string $toAccountID
+           * @param string $message
+           * @param float $amount
            * 
-           * @return array
+           * @return array|self
            */
           public function postTransfer(string $customerID, string $fromAccountID, string $toAccountID, string $message, float $amount){
             $endpoint = $this->getEndpoint('accounts') . 'Transfers';
 
-            $transfer = $this->request('POST', $endpoint, json_encode([
+            $transfer = $this->request('POST', $endpoint, [
                 'fromAccountId' => $fromAccountID,
                 'toAccountId' => $toAccountID,
                 'message' => $message,
                 'amount' => $amount
-            ]), [
+            ], [
                 'customerId' => $customerID,
                 'Content-Type' => 'text/json'
             ]);
 
-            if(!is_array($transfer))
+            if(!$this->isSuccessful($transfer))
                 throw new SBankenTransferException("Could not make transfer. Ensure that you have the correct access privileges.");
 
             return $transfer;
@@ -343,26 +341,26 @@
           /**
            * Pay non-processed/new E-Invoice
            * 
-           * @var string $customerID
-           * @var string $eInvoiceID
-           * @var string $accountID
-           * @var bool $payOnlyMinimumAmount
+           * @param string $customerID
+           * @param string $eInvoiceID
+           * @param string $accountID
+           * @param bool $payOnlyMinimumAmount
            * 
-           * @return array
+           * @return array|self
            */
           public function postEInvoice(string $customerID, string $eInvoiceID, string $accountID, bool $payOnlyMinimumAmount = false){
               $endpoint = $this->getEndpoint('accounts') . 'EFakturas';
 
-              $payment = $this->request('POST', $endpoint, json_encode([
+              $payment = $this->request('POST', $endpoint, [
                   'eFakturaId' => $eInvoiceID,
                   'accountId' => $accountID,
                   'payOnlyMinimumAmount' => $payOnlyMinimumAmount
-              ]), [
+              ], [
                   'customerId' => $customerID,
                   'Content-Type' => 'text/json'
               ]);
 
-              if(!is_array($payment))
+              if(!$this->isSuccessful($payment))
                 throw new SBankenEInvoiceException("Could not pay e-invoice. Make sure that you have the correct access privileges and that the e-invoice hasn't been paid already.");
 
               return $payment;

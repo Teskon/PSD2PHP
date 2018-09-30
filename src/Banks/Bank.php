@@ -1,6 +1,14 @@
 <?php
     namespace Teskon\PSD2PHP\Banks;
-    use GuzzleHttp\Client;
+    use GuzzleHttp\{
+        Client,
+        Pool
+    };
+    use GuzzleHttp\Psr7;
+    use GuzzleHttp\Psr7\{
+        Request,
+        Response
+    };
     use Teskon\PSD2PHP\Exceptions\Banks\BankException;
     use GuzzleHttp\Exception\BadResponseException;
 
@@ -50,6 +58,21 @@
          * @var int $currentTry
          */
         private $currentTry = 0;
+
+        /**
+         * @var bool $queueActive
+         */
+        private $queueActive = false;
+
+        /**
+         * @var array $queue
+         */
+        private $queue = [];
+
+        /**
+         * @var bool $forceRequest
+         */
+        protected $forceRequest = false;
           
         /**
          * Default constructor for storing configuration variables
@@ -146,7 +169,13 @@
                  */
                 'auth_retries_codes' => [
                     500
-                ]
+                ],
+
+                /**
+                 * (int) Default concurrency of batch requests
+                 * 
+                 */
+                'batch_concurrency' => 15
             ];
         }
 
@@ -167,7 +196,7 @@
         protected function getBearerAuthorization(){
             $token = $this->getAuthToken();
 
-            if(!isset($token['token_type'], $token['access_token']))
+            if(!is_array($token) || !isset($token['token_type'], $token['access_token']))
                 return '';
 
             return $token['token_type'] . ' ' . $token['access_token'];
@@ -209,30 +238,19 @@
                 throw new BankException("Invalid method. The method used to send your request needs to be one of the following: " . implode(', ', $this->validMethods));
             }
 
-            // Check type of parameters
-            if(is_array($parameters)){
-                $requestParameters = ['form_params' => $parameters];
-            }
-            else if(is_string($parameters)){
-                $requestParameters = ['body' => $parameters];
-            }
-            else if(is_null($parameters)){
-                $requestParameters = [];
-            }
-            else{
-                throw new BankException("Invalid type. Parameters sent with the request has to be array, string or null.");
-            }
+            // Set default request headers
+            $requestHeaders = $this->defaultHeaders;
 
             // Set headers for this specific request
             if((is_array($headers) && count($headers) > 0) || is_null($headers))
-                $requestParameters['headers'] = array_merge($this->defaultHeaders, $headers);
+                $requestHeaders = array_merge($requestHeaders, $headers);
 
-            if(empty($requestParameters['headers']['Authorization']))
-                $requestParameters['headers']['Authorization'] = $this->getBearerAuthorization();
+            if(empty($requestHeaders['Authorization']))
+                $requestHeaders['Authorization'] = $this->getBearerAuthorization();
 
-            if(substr($endpoint, 0, 4) != 'http' && isset($this->endpoint) && $requestParameters['base_uri'] != $this->endpoint){
+            if(substr($endpoint, 0, 4) != 'http' && isset($this->endpoint)){
                 // Make sure endpoint is up to date
-                $requestParameters['base_uri'] = $this->endpoint;
+                $endpoint = $this->endpoint . $endpoint;
             }
 
             // Overwrite auth_retries if not set
@@ -249,9 +267,33 @@
                 }
             }
 
+            $requestBody = '';
+            if(in_array($method, ['POST', 'PUT', 'PATCH'])){
+                if(isset($requestHeaders['Content-Type']) && strtolower($requestHeaders['Content-Type']) == 'application/json'){
+                    $requestBody = json_encode($parameters);
+                }
+                else if(is_array($parameters)){
+                    $requestBody = http_build_query($parameters);
+                }
+                else if(is_string($parameters)){
+                    $requestBody = $parameters;
+                }
+            }
+            else if($method == "GET" && count($parameters) > 0){
+                // Add parameters to endpoint
+                $endpoint = $this->generateGetEndpoint($endpoint, $parameters);
+            }
+
+            $request = new Request($method, $endpoint, $requestHeaders, $requestBody); 
+
+            if($this->queueActive && (!isset($this->forceRequest) || $this->forceRequest == false)){
+                $this->queue[] = $request;
+                return $this;
+            }
+
             do {
                 try {
-                    $response = $this->httpClient->request($method, $endpoint, $requestParameters);
+                    $response = $this->httpClient->send($request);
                     break;
                 }
                 catch(BadResponseException $e){
@@ -263,8 +305,6 @@
                         break;
 
                     if(in_array($response->getStatusCode(), $this->configuration['auth_retries_codes'])){
-                        $this->getAuthToken(true);
-
                         return $this->request($method, $endpoint, $parameters, $headers, $type);
                     }
                     else
@@ -275,10 +315,63 @@
             // Reset $currentTry
             $this->currentTry = 0;
 
+            // Reset $forceRequest
+            $this->forceRequest = false;
+
             // Reset configuration values
             $this->setConfiguration($this->temporaryConfiguration);
 
             return $this->generateReturn($response, $type);
+        }
+
+        /**
+         * Start queue
+         * 
+         * @return self
+         */
+        public function queue(){
+            $this->queueActive = true;
+
+            return $this;
+        }
+
+        /**
+         * Send all requests in batches
+         * 
+         * @param int $limit
+         * 
+         * @return array
+         */
+        public function get(int $limit = null){
+            if($limit <= 0)
+                $limit = null;
+
+            if($limit == null){
+                $requests = $this->queue;
+                $this->queue = [];
+            }
+            else
+                $requests = array_splice($this->queue, 0, $limit);
+
+            if(count($requests) == 0)
+                return [];
+
+            $responses = Pool::batch($this->httpClient, $requests, [
+                'concurrency' => $this->configuration['batch_concurrency']
+            ]);
+
+            $resp = [];
+            foreach($responses as $response){
+                if(!$response instanceof Response)
+                    $response = $response->getResponse();
+                
+                $resp[] = $response->getBody()->getContents();
+            }
+
+            // Reset $queueActive
+            $this->queueActive = false;
+            
+            return $resp;
         }
 
         /**
@@ -302,14 +395,62 @@
         }
 
         /**
+         * Generate GET endpoint with parameters
+         * 
+         * @param string $endpoint
+         * @param array|null $parameters
+         * 
+         * @return string
+         */
+        private function generateGetEndpoint(string $endpoint, $parameters){
+            $parsedEndpoint = parse_url($endpoint);
+            $endpoint = '';
+
+            if(isset($parsedEndpoint['scheme'], $parsedEndpoint['host']))
+                $endpoint .= $parsedEndpoint['scheme'] . '://' . $parsedEndpoint['host'];
+
+            if(isset($parsedEndpoint['path']))
+                $endpoint .= $parsedEndpoint['path'];
+
+            $queryParts = [];
+            if(isset($parsedEndpoint['query']))
+                parse_str($parsedEndpoint['query'], $queryParts);
+                
+
+            if(is_array($parameters) && count($parameters) > 0){
+                $queryParts = array_merge($queryParts, $parameters);
+            }
+
+            if(is_array($queryParts) && count($queryParts) > 0){
+                $endpoint .= '?' . http_build_query($queryParts);
+            }
+
+            if(isset($parsedEndpoint['fragment']))
+                $endpoint .= '#' .$parsedEndpoint['fragment'];
+
+            return $endpoint;
+        }
+
+        /**
          * JSON return type
          * 
-         * @var string $response
+         * @param string $response
          * 
          * @return array
          */
         protected function returnJson($response){
             return json_decode($response, true);
+        }
+
+        /**
+         * Check if response is successful
+         * 
+         * @param mixed $response
+         * 
+         * @return bool
+         */
+        protected function isSuccessful($response){
+            return $response instanceof self || is_array($response);
         }
 
         /**
