@@ -50,7 +50,7 @@
          * @return mixed
          */
         public function __call(string $function, array $parameters){
-            $this->bank->{$function}(...$parameters);
+            return $this->bank->{$function}(...$parameters);
         }
 
         /**
